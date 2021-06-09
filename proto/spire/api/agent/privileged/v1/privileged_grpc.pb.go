@@ -21,6 +21,7 @@ type PrivilegedClient interface {
 	//
 	// The caller must be local.
 	FetchX509SVIDsBySelectors(ctx context.Context, in *FetchX509SVIDsBySelectorsRequest, opts ...grpc.CallOption) (Privileged_FetchX509SVIDsBySelectorsClient, error)
+	WatchX509SVIDs(ctx context.Context, opts ...grpc.CallOption) (Privileged_WatchX509SVIDsClient, error)
 }
 
 type privilegedClient struct {
@@ -63,6 +64,37 @@ func (x *privilegedFetchX509SVIDsBySelectorsClient) Recv() (*FetchX509SVIDsBySel
 	return m, nil
 }
 
+func (c *privilegedClient) WatchX509SVIDs(ctx context.Context, opts ...grpc.CallOption) (Privileged_WatchX509SVIDsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Privileged_serviceDesc.Streams[1], "/spire.api.agent.privileged.v1.Privileged/WatchX509SVIDs", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &privilegedWatchX509SVIDsClient{stream}
+	return x, nil
+}
+
+type Privileged_WatchX509SVIDsClient interface {
+	Send(*WatchX509SVIDsRequest) error
+	Recv() (*WatchX509SVIDsResponse, error)
+	grpc.ClientStream
+}
+
+type privilegedWatchX509SVIDsClient struct {
+	grpc.ClientStream
+}
+
+func (x *privilegedWatchX509SVIDsClient) Send(m *WatchX509SVIDsRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *privilegedWatchX509SVIDsClient) Recv() (*WatchX509SVIDsResponse, error) {
+	m := new(WatchX509SVIDsResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // PrivilegedServer is the server API for Privileged service.
 // All implementations must embed UnimplementedPrivilegedServer
 // for forward compatibility
@@ -71,6 +103,7 @@ type PrivilegedServer interface {
 	//
 	// The caller must be local.
 	FetchX509SVIDsBySelectors(*FetchX509SVIDsBySelectorsRequest, Privileged_FetchX509SVIDsBySelectorsServer) error
+	WatchX509SVIDs(Privileged_WatchX509SVIDsServer) error
 	mustEmbedUnimplementedPrivilegedServer()
 }
 
@@ -80,6 +113,9 @@ type UnimplementedPrivilegedServer struct {
 
 func (UnimplementedPrivilegedServer) FetchX509SVIDsBySelectors(*FetchX509SVIDsBySelectorsRequest, Privileged_FetchX509SVIDsBySelectorsServer) error {
 	return status.Errorf(codes.Unimplemented, "method FetchX509SVIDsBySelectors not implemented")
+}
+func (UnimplementedPrivilegedServer) WatchX509SVIDs(Privileged_WatchX509SVIDsServer) error {
+	return status.Errorf(codes.Unimplemented, "method WatchX509SVIDs not implemented")
 }
 func (UnimplementedPrivilegedServer) mustEmbedUnimplementedPrivilegedServer() {}
 
@@ -115,6 +151,32 @@ func (x *privilegedFetchX509SVIDsBySelectorsServer) Send(m *FetchX509SVIDsBySele
 	return x.ServerStream.SendMsg(m)
 }
 
+func _Privileged_WatchX509SVIDs_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(PrivilegedServer).WatchX509SVIDs(&privilegedWatchX509SVIDsServer{stream})
+}
+
+type Privileged_WatchX509SVIDsServer interface {
+	Send(*WatchX509SVIDsResponse) error
+	Recv() (*WatchX509SVIDsRequest, error)
+	grpc.ServerStream
+}
+
+type privilegedWatchX509SVIDsServer struct {
+	grpc.ServerStream
+}
+
+func (x *privilegedWatchX509SVIDsServer) Send(m *WatchX509SVIDsResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *privilegedWatchX509SVIDsServer) Recv() (*WatchX509SVIDsRequest, error) {
+	m := new(WatchX509SVIDsRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 var _Privileged_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "spire.api.agent.privileged.v1.Privileged",
 	HandlerType: (*PrivilegedServer)(nil),
@@ -124,6 +186,12 @@ var _Privileged_serviceDesc = grpc.ServiceDesc{
 			StreamName:    "FetchX509SVIDsBySelectors",
 			Handler:       _Privileged_FetchX509SVIDsBySelectors_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "WatchX509SVIDs",
+			Handler:       _Privileged_WatchX509SVIDs_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "spire/api/agent/privileged/v1/privileged.proto",

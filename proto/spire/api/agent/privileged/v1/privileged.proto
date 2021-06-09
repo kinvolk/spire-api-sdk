@@ -10,6 +10,9 @@ service Privileged {
     //
     // The caller must be local.
     rpc FetchX509SVIDsBySelectors(FetchX509SVIDsBySelectorsRequest) returns (stream FetchX509SVIDsBySelectorsResponse);
+
+
+    rpc WatchX509SVIDs(stream WatchX509SVIDsRequest) returns (stream WatchX509SVIDsResponse);
 }
 
 message FetchX509SVIDsBySelectorsRequest {
@@ -28,4 +31,22 @@ message X509SVIDWithKey {
     spire.api.types.X509SVID x509_svid = 1;
 
     bytes x509_svid_key = 2;
+}
+
+message WatchX509SVIDsRequest {
+    enum Operation {
+        UNSPEC = 0;
+        ADD = 1;
+        DEL = 2;
+    }
+
+    Operation operation = 1;
+    uint64 id = 2;
+    repeated spire.api.types.Selector selectors = 3;
+}
+
+message WatchX509SVIDsResponse {
+    uint64 id = 1;   // who is this reply for
+
+    FetchX509SVIDsBySelectorsResponse response = 2;
 }
